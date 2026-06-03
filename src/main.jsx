@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
   Area,
@@ -67,6 +67,7 @@ function Stat({ label, value, accent }) {
 }
 
 function App() {
+  const itemAnchorRef = useRef(null);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState(DEFAULT_ITEMS);
   const [selectedId, setSelectedId] = useState(DEFAULT_ITEMS[0].id);
@@ -172,6 +173,13 @@ function App() {
 
   const item = itemData?.item;
   const hasVolume = chartData.some((row) => row.volume);
+  const selectItem = (id) => {
+    setSelectedId(id);
+    window.history.replaceState(null, '', '#item-detail');
+    window.requestAnimationFrame(() => {
+      itemAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
 
   return (
     <main className="app-shell">
@@ -199,7 +207,7 @@ function App() {
             <button
               key={result.id}
               className={selectedId === result.id ? 'item-row active' : 'item-row'}
-              onClick={() => setSelectedId(result.id)}
+              onClick={() => selectItem(result.id)}
             >
               <img src={result.icon || `https://secure.runescape.com/m=itemdb_rs/obj_sprite.gif?id=${result.id}`} alt="" />
               <span>{result.name}</span>
@@ -212,7 +220,7 @@ function App() {
       <section className="content">
         {error && <div className="error">{error}</div>}
 
-        <header className="topbar">
+        <header id="item-detail" ref={itemAnchorRef} className="topbar">
           <div className="item-title">
             {item?.icon && <img src={item.icon} alt="" />}
             <div>
@@ -340,13 +348,13 @@ function App() {
                   title="Top 5 increases"
                   items={movers.gainers}
                   type="up"
-                  onSelect={setSelectedId}
+                  onSelect={selectItem}
                 />
                 <MoverList
                   title="Top 5 decreases"
                   items={movers.losers}
                   type="down"
-                  onSelect={setSelectedId}
+                  onSelect={selectItem}
                 />
               </div>
             </section>

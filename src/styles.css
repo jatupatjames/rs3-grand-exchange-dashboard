@@ -169,6 +169,7 @@ p {
   align-items: center;
   gap: 18px;
   padding: 18px;
+  scroll-margin-top: 20px;
 }
 
 .item-title {
