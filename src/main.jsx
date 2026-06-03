@@ -188,6 +188,8 @@ function App() {
 
   const item = itemData?.item;
   const hasVolume = chartData.some((row) => row.volume);
+  const historyDays = itemData?.history?.length || 0;
+  const volumeDays = chartData.filter((row) => row.volume).length;
   const scrollToItemAnchor = () => {
     window.history.replaceState(null, '', '#item-detail');
     const anchor = itemAnchorRef.current || document.getElementById('item-detail');
@@ -290,7 +292,7 @@ function App() {
           <Stat label="Current guide price" value={formatGp(item?.price)} accent="gold" />
           <Stat label="Latest volume" value={formatNumber(item?.volume)} />
           <Stat label={`${range} day change`} value={insight ? pct(insight.change) : 'n/a'} accent={insight?.change >= 0 ? 'up' : 'down'} />
-          <Stat label="Buy limit" value={formatNumber(item?.limit)} />
+          <Stat label="History loaded" value={`${Math.min(range, historyDays)} days`} />
         </div>
 
         <div className="dashboard-grid">
@@ -300,6 +302,9 @@ function App() {
                 <div>
                   <span>{chartMode === 'volume' ? 'Daily traded volume' : 'Guide price movement'}</span>
                   <h3>{chartMode === 'volume' ? 'Volume' : 'Price history'}</h3>
+                  {chartMode === 'volume' && range > volumeDays ? (
+                    <small className="panel-note">Volume is available for the latest {volumeDays || 0} days.</small>
+                  ) : null}
                 </div>
                 {loadingItem && <Loader2 className="spin" size={20} />}
               </div>

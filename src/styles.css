@@ -314,6 +314,12 @@ p {
   font-size: 1.3rem;
 }
 
+.panel-note {
+  display: block;
+  margin-top: 4px;
+  color: #9fb0ba;
+}
+
 .chart-wrap {
   width: 100%;
   height: min(54vh, 520px);

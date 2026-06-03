@@ -127,6 +127,26 @@ function normalizeWikiHistory(history) {
     }));
 }
 
+function mergePriceAndVolumeHistory(jagexHistory, wikiHistory) {
+  const rowsByDate = new Map();
+
+  for (const row of jagexHistory) {
+    rowsByDate.set(row.date, { ...row });
+  }
+
+  for (const row of wikiHistory) {
+    const existing = rowsByDate.get(row.date);
+    rowsByDate.set(row.date, {
+      ...existing,
+      ...row,
+      average: existing?.average ?? row.average ?? null,
+      volume: row.volume ?? existing?.volume ?? null,
+    });
+  }
+
+  return [...rowsByDate.values()].sort((a, b) => a.timestamp - b.timestamp);
+}
+
 function describeTrend(trend) {
   if (!trend) return 'neutral';
   return trend === 'positive' ? 'up' : trend === 'negative' ? 'down' : 'neutral';
@@ -205,15 +225,10 @@ app.get('/api/items/:id', async (req, res) => {
     const wikiLatest = latest?.[id];
     const wikiHistory = history?.[id];
     const jagexHistory = graph ? normalizeJagexGraph(graph) : [];
-    const historyRows = Array.isArray(wikiHistory) && wikiHistory.length
+    const wikiRows = Array.isArray(wikiHistory) && wikiHistory.length
       ? normalizeWikiHistory(wikiHistory)
-      : jagexHistory;
-
-    const mergedRows = historyRows.map((row) => {
-      if (row.volume !== null) return row;
-      const jagexRow = jagexHistory.find((candidate) => candidate.date === row.date);
-      return { ...row, average: row.average ?? jagexRow?.average ?? null };
-    });
+      : [];
+    const mergedRows = mergePriceAndVolumeHistory(jagexHistory, wikiRows);
 
     const item = {
       id,
