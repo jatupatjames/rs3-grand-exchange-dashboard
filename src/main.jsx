@@ -68,6 +68,7 @@ function Stat({ label, value, accent }) {
 
 function App() {
   const itemAnchorRef = useRef(null);
+  const shouldAnchorSelectionRef = useRef(false);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState(DEFAULT_ITEMS);
   const [selectedId, setSelectedId] = useState(DEFAULT_ITEMS[0].id);
@@ -128,6 +129,21 @@ function App() {
   }, [selectedId]);
 
   useEffect(() => {
+    if (!shouldAnchorSelectionRef.current) return;
+    shouldAnchorSelectionRef.current = false;
+
+    const scrollToSelectedItem = () => {
+      itemAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    window.history.replaceState(null, '', '#item-detail');
+    window.requestAnimationFrame(scrollToSelectedItem);
+    const fallback = window.setTimeout(scrollToSelectedItem, 120);
+
+    return () => window.clearTimeout(fallback);
+  }, [selectedId]);
+
+  useEffect(() => {
     let alive = true;
     async function loadMovers() {
       setLoadingMovers(true);
@@ -173,12 +189,19 @@ function App() {
 
   const item = itemData?.item;
   const hasVolume = chartData.some((row) => row.volume);
-  const selectItem = (id) => {
-    setSelectedId(id);
+  const scrollToItemAnchor = () => {
     window.history.replaceState(null, '', '#item-detail');
     window.requestAnimationFrame(() => {
       itemAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
+  };
+  const selectItem = (id) => {
+    if (id === selectedId) {
+      scrollToItemAnchor();
+      return;
+    }
+    shouldAnchorSelectionRef.current = true;
+    setSelectedId(id);
   };
 
   return (
