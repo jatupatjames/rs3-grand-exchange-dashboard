@@ -132,15 +132,14 @@ function App() {
     if (!shouldAnchorSelectionRef.current) return;
     shouldAnchorSelectionRef.current = false;
 
-    const scrollToSelectedItem = () => {
-      itemAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    scrollToItemAnchor();
+    const fallback = window.setTimeout(scrollToItemAnchor, 180);
+    const lateFallback = window.setTimeout(scrollToItemAnchor, 420);
+
+    return () => {
+      window.clearTimeout(fallback);
+      window.clearTimeout(lateFallback);
     };
-
-    window.history.replaceState(null, '', '#item-detail');
-    window.requestAnimationFrame(scrollToSelectedItem);
-    const fallback = window.setTimeout(scrollToSelectedItem, 120);
-
-    return () => window.clearTimeout(fallback);
   }, [selectedId]);
 
   useEffect(() => {
@@ -191,9 +190,11 @@ function App() {
   const hasVolume = chartData.some((row) => row.volume);
   const scrollToItemAnchor = () => {
     window.history.replaceState(null, '', '#item-detail');
-    window.requestAnimationFrame(() => {
-      itemAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
+    const anchor = itemAnchorRef.current || document.getElementById('item-detail');
+    if (!anchor) return;
+
+    const top = anchor.getBoundingClientRect().top + window.scrollY - 20;
+    window.scrollTo({ top: Math.max(top, 0), behavior: 'smooth' });
   };
   const selectItem = (id) => {
     if (id === selectedId) {
